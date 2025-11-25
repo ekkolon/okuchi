@@ -1,0 +1,29 @@
+[package]
+name = "okuchi-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+num-bigint = { version = "0.4", features = ["rand"] }
+
+[dependencies.okuchi]
+path = ".."
+
+[[bin]]
+name = "encrypt_decrypt"
+path = "fuzz_targets/encrypt_decrypt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "homomorphic"
+path = "fuzz_targets/homomorphic.rs"
+test = false
+doc = false
+bench = false
