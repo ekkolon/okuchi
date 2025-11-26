@@ -252,14 +252,15 @@ mod tests {
         let pub_key = keypair.pub_key();
         let priv_key = keypair.priv_key();
 
-        // small integers that fit in one block — test homomorphic addition via packed streams
+        // small integers that fit in one block
+        // test homomorphic addition via packed streams
         let m1 = BigUint::from(50u32);
         let m2 = BigUint::from(25u32);
 
         let packed1 = Okuchi::encrypt_stream(&pub_key, m1.to_bytes_be()).unwrap();
         let packed2 = Okuchi::encrypt_stream(&pub_key, m2.to_bytes_be()).unwrap();
 
-        // homomorphically add the two packed streams (block-by-block)
+        // homomorphically add the two packed streams (block by block)
         use crate::stream::homomorphic_add_packed;
         let packed_sum = homomorphic_add_packed(&pub_key, &packed1, &packed2).unwrap();
 
