@@ -470,28 +470,4 @@ mod streaming_tests {
 
         assert_eq!(sum_bn, &m1 + &m2);
     }
-
-    // #[test]
-    // fn encrypt_writer_and_decrypt_reader_roundtrip() {
-    //     let keypair = KeyPair::new(512).unwrap();
-    //     let pub_key = keypair.pub_key();
-    //     let priv_key = keypair.priv_key();
-
-    //     let msg = "Streaming writer test 🔐";
-    //     let mut out: Vec<u8> = Vec::new();
-    //     {
-    //         // EncryptWriter::new writes header; it currently requires Vec<u8> to patch block count in finish()
-    //         let mut w = EncryptWriter::new(&mut out, &pub_key).unwrap();
-    //         // write as streaming writes
-    //         w.write_all(msg.as_bytes()).unwrap();
-    //         let _inner = w.finish().unwrap();
-    //     }
-
-    //     // Now decrypt via DecryptingReader
-    //     let mut reader = DecryptingReader::new(Cursor::new(out), priv_key.clone());
-    //     let mut buf = Vec::new();
-    //     reader.read_to_end(&mut buf).unwrap();
-    //     let s = String::from_utf8(buf).unwrap();
-    //     assert_eq!(s, msg);
-    // }
 }

@@ -153,7 +153,7 @@ impl KeyPair {
         let q = crate::util::generate_safe_prime(q_bits);
 
         if p == q {
-            // astronomically unlikely, but check anyway
+            // astronomically unlikely, but we must guarantee distinct p,q  primes
             return Err(Error::KeyGenerationFailed("Primes must be distinct".into()));
         }
 
