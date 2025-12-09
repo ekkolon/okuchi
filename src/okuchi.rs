@@ -62,7 +62,7 @@ impl Okuchi {
 
         // If data is empty, encrypt a single zero-block so decrypt can distinguish empty vs missing.
         if bytes.is_empty() {
-            let c = Self::encrypt(pub_key, &[])?;
+            let c = Self::encrypt(pub_key, [])?;
             blocks.push(c.to_bytes());
         }
 
@@ -242,7 +242,7 @@ impl Okuchi {
         // conservative estimate of p bits
         let p_bits = n_bits / 3;
         // ensure at least 1 byte available
-        let bytes = (p_bits.saturating_sub(1) / 8) as usize;
+        let bytes = p_bits.saturating_sub(1) / 8;
         // require at least 1 byte
         std::cmp::max(1, bytes)
     }
@@ -264,8 +264,8 @@ mod tests {
         let msg = "Testing OU encryption";
 
         // Use packed stream API for arbitrary UTF-8
-        let packed = Okuchi::encrypt_stream(&pub_key, msg).unwrap();
-        let decrypted_bytes = Okuchi::decrypt_stream(&priv_key, &packed).unwrap();
+        let packed = Okuchi::encrypt_stream(pub_key, msg).unwrap();
+        let decrypted_bytes = Okuchi::decrypt_stream(priv_key, &packed).unwrap();
 
         let decrypted = String::from_utf8(decrypted_bytes).expect("decrypted not valid UTF-8");
         assert_eq!(decrypted, msg);
@@ -280,8 +280,8 @@ mod tests {
         // make a long message that will definitely exceed a single block
         let msg = "Rust cryptography long text test".repeat(50);
 
-        let packed = Okuchi::encrypt_stream(&pub_key, &msg).unwrap();
-        let decrypted_bytes = Okuchi::decrypt_stream(&priv_key, &packed).unwrap();
+        let packed = Okuchi::encrypt_stream(pub_key, &msg).unwrap();
+        let decrypted_bytes = Okuchi::decrypt_stream(priv_key, &packed).unwrap();
 
         let decrypted = String::from_utf8(decrypted_bytes).expect("decrypted not valid UTF-8");
         assert_eq!(decrypted, msg);
@@ -298,13 +298,13 @@ mod tests {
         let m1 = BigUint::from(50u32);
         let m2 = BigUint::from(25u32);
 
-        let packed1 = Okuchi::encrypt_stream(&pub_key, m1.to_bytes_be()).unwrap();
-        let packed2 = Okuchi::encrypt_stream(&pub_key, m2.to_bytes_be()).unwrap();
+        let packed1 = Okuchi::encrypt_stream(pub_key, m1.to_bytes_be()).unwrap();
+        let packed2 = Okuchi::encrypt_stream(pub_key, m2.to_bytes_be()).unwrap();
 
         // homomorphically add the two packed streams (block by block)
-        let packed_sum = Okuchi::homomorphic_add_packed(&pub_key, &packed1, &packed2).unwrap();
+        let packed_sum = Okuchi::homomorphic_add_packed(pub_key, &packed1, &packed2).unwrap();
 
-        let decrypted_sum_bytes = Okuchi::decrypt_stream(&priv_key, &packed_sum).unwrap();
+        let decrypted_sum_bytes = Okuchi::decrypt_stream(priv_key, &packed_sum).unwrap();
         let decrypted_sum_bn = BigUint::from_bytes_be(&decrypted_sum_bytes);
 
         let expected = &m1 + &m2;
@@ -331,7 +331,7 @@ mod tests {
         let keypair = KeyPair::new(512).unwrap();
         let message = "hello world!";
 
-        let ciphertext = Okuchi::encrypt(keypair.pub_key(), &message).unwrap();
+        let ciphertext = Okuchi::encrypt(keypair.pub_key(), message).unwrap();
         let decrypted = Okuchi::decrypt(keypair.priv_key(), &ciphertext).unwrap();
 
         assert_eq!(message.as_bytes(), decrypted);
@@ -378,8 +378,8 @@ mod tests {
         let keypair = KeyPair::new(512).unwrap();
         let message = "Hello world";
 
-        let c1 = Okuchi::encrypt(keypair.pub_key(), &message).unwrap();
-        let c2 = Okuchi::encrypt(keypair.pub_key(), &message).unwrap();
+        let c1 = Okuchi::encrypt(keypair.pub_key(), message).unwrap();
+        let c2 = Okuchi::encrypt(keypair.pub_key(), message).unwrap();
 
         // different random r values MUST produce different ciphertexts
         assert_ne!(c1.value(), c2.value());
@@ -390,7 +390,7 @@ mod tests {
         let keypair = KeyPair::new(512).unwrap();
         let too_large = keypair.pub_key().n() + BigUint::one();
 
-        let result = Okuchi::encrypt(keypair.pub_key(), &too_large.to_bytes_be());
+        let result = Okuchi::encrypt(keypair.pub_key(), too_large.to_bytes_be());
         assert!(matches!(result, Err(Error::PlaintextTooLarge)));
     }
 
@@ -421,7 +421,7 @@ mod tests {
         let keypair = KeyPair::new(512).unwrap();
         let message = BigUint::zero();
 
-        let c = Okuchi::encrypt(keypair.pub_key(), &message.to_bytes_be()).unwrap();
+        let c = Okuchi::encrypt(keypair.pub_key(), message.to_bytes_be()).unwrap();
         let decrypted = Okuchi::decrypt(keypair.priv_key(), &c).unwrap();
 
         assert_eq!(message, BigUint::from_bytes_be(&decrypted));
@@ -437,14 +437,14 @@ mod tests {
         let m2 = BigUint::from(20u32);
         let m3 = BigUint::from(30u32);
 
-        let c1 = Okuchi::encrypt(&pub_key, &m1.to_bytes_be()).unwrap();
-        let c2 = Okuchi::encrypt(&pub_key, &m2.to_bytes_be()).unwrap();
-        let c3 = Okuchi::encrypt(&pub_key, &m3.to_bytes_be()).unwrap();
+        let c1 = Okuchi::encrypt(pub_key, m1.to_bytes_be()).unwrap();
+        let c2 = Okuchi::encrypt(pub_key, m2.to_bytes_be()).unwrap();
+        let c3 = Okuchi::encrypt(pub_key, m3.to_bytes_be()).unwrap();
 
         let c_prod = &(&c1 * &c2) * &c3;
         let c_final = Ciphertext::new(c_prod.value() % pub_key.n());
 
-        let decrypted = Okuchi::decrypt(&priv_key, &c_final).unwrap();
+        let decrypted = Okuchi::decrypt(priv_key, &c_final).unwrap();
         let expected = (&m1 + &m2 + &m3) % &priv_key.p;
 
         assert_eq!(expected.to_bytes_be(), decrypted);
