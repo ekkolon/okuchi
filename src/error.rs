@@ -1,6 +1,8 @@
 // Copyright 2025 Nelson Dominguez
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+pub type Result<T> = std::result::Result<T, Error>;
+
 /// Errors that can occur during cryptographic operations.
 #[derive(Debug, thiserror::Error, Clone, PartialEq, Eq)]
 pub enum Error {
@@ -28,5 +30,3 @@ pub enum Error {
     #[error("decryption failed: {0}")]
     DecryptionFailed(String),
 }
-
-pub type Result<T> = std::result::Result<T, Error>;

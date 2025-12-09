@@ -21,6 +21,7 @@ impl PublicKey {
         if n.is_zero() || g.is_zero() || h.is_zero() {
             return Err(Error::InvalidPublicKey);
         }
+
         if g >= n || h >= n {
             return Err(Error::InvalidPublicKey);
         }
