@@ -1,58 +1,62 @@
 // Copyright 2025 Nelson Dominguez
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{Error, PublicKey, Result};
-use std::ops::Deref;
+use crate::error::{Error, Result};
+use crate::keypair::PublicKey;
 
 use num_bigint_dig::BigUint;
+use std::ops::Deref;
 
-/// Ciphertext bound to a specific public key's modulus.
+/// A Paillier ciphertext bound to a specific public-key modulus.
 ///
-/// This prevents accidentally mixing ciphertexts from different key pairs
-/// during homomorphic operations.
-#[derive(Debug, Clone)]
+/// The stored modulus bit length acts as a lightweight fingerprint to prevent
+/// accidental mixing of ciphertexts originating from different key pairs.
+/// This is a safety check, not a cryptographic binding.
+#[derive(Debug, Clone, Eq)]
 pub struct Ciphertext {
     value: BigUint,
-    /// Store modulus bit length as a fingerprint
-    /// (not cryptographically binding, but catches common mistakes)
+
+    /// Bit length of the public modulus used to create this ciphertext.
     pub(crate) modulus_bits: usize,
 }
 
 impl Ciphertext {
-    /// Creates a ciphertext with modulus validation
+    /// Construct a new ciphertext with the given modulus context.
     pub(crate) fn new(value: BigUint, modulus_bits: usize) -> Self {
-        Self {
-            value,
-            modulus_bits,
-        }
+        Self { value, modulus_bits }
     }
 
-    /// Get the underlying value (read-only)
+    /// Return a reference to the underlying ciphertext value.
     pub fn value(&self) -> &BigUint {
         &self.value
     }
 
-    /// Serialize to bytes
+    /// Serialize the ciphertext value as big-endian bytes.
     pub fn to_bytes(&self) -> Vec<u8> {
         self.value.to_bytes_be()
     }
 
-    /// Deserialize from bytes (requires modulus context)
+    /// Deserialize a ciphertext from big-endian bytes.
+    ///
+    /// The caller must supply the modulus bit length to restore the
+    /// key context.
     pub fn from_bytes(bytes: &[u8], modulus_bits: usize) -> Self {
         Self::new(BigUint::from_bytes_be(bytes), modulus_bits)
     }
 
-    /// Homomorphic addition: E(m1) ⊕ E(m2) = E(m1 + m2)
+    /// Homomorphic addition.
     ///
-    /// Requires both ciphertexts to be from the same key.
+    /// Given ciphertexts `E(m₁)` and `E(m₂)`, returns `E(m₁ + m₂)`.
+    /// Both operands must originate from the same public key.
     pub fn add(&self, other: &Self, pub_key: &PublicKey) -> Result<Self> {
         if self.modulus_bits != other.modulus_bits {
             return Err(Error::KeyMismatch);
         }
 
         let n = pub_key.n();
-        let sum_value = (&self.value * &other.value) % n;
-        Ok(Self::new(sum_value, self.modulus_bits))
+        let sum = (&self.value * &other.value) % n;
+
+        Ok(Self::new(sum, self.modulus_bits))
     }
 }
 
@@ -61,8 +65,6 @@ impl PartialEq for Ciphertext {
         self.value == other.value && self.modulus_bits == other.modulus_bits
     }
 }
-
-impl Eq for Ciphertext {}
 
 impl Deref for Ciphertext {
     type Target = BigUint;
