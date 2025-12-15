@@ -9,21 +9,24 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-num-bigint-dig = { version = "0.8", features = ["zeroize", "prime", "rand", "u64_digit"] }
+num-bigint-dig = { version = "0.9.1", features = ["rand"] }
+num-traits = "0.2"
 
 [dependencies.okuchi]
 path = ".."
+features = ["allow-weak-keys"]
+
+[lints.rust]
+warnings = "allow"
 
 [[bin]]
-name = "encrypt_decrypt"
-path = "fuzz_targets/encrypt_decrypt.rs"
+name = "basic"
+path = "fuzz_targets/basic.rs"
 test = false
 doc = false
-bench = false
 
 [[bin]]
-name = "homomorphic"
-path = "fuzz_targets/homomorphic.rs"
+name = "comprehensive"
+path = "fuzz_targets/comprehensive.rs"
 test = false
 doc = false
-bench = false
