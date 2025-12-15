@@ -9,14 +9,22 @@ readme = "README.md"
 
 
 [dependencies]
-num-bigint-dig = { version = "0.8", features = ["zeroize", "prime", "rand", "u64_digit"] }
+num-bigint-dig = { version = "0.9", features = ["zeroize", "prime", "rand"] }
 num-traits = "0.2"
-rand = "0.8"
-zeroize = { version = "1.6", features = ["derive"] }
+rand = "0.9"
+zeroize = { version = "1.8", features = ["derive"] }
 thiserror = "2.0"
 
+
 [dev-dependencies]
-criterion = "0.7"
+criterion = "0.8"
+
+
+[features]
+default = []
+expose-secret = []
+allow-weak-keys = []
+
 
 [[bench]]
 name = "okuchi"
