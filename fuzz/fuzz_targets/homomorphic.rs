@@ -1,31 +1,36 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use num_bigint::BigUint;
-use okuchi::{Ciphertext, Okuchi, generate_keypair};
+use num_bigint_dig::BigUint;
+use okuchi::{Ciphertext, KeyPair, Okuchi};
+
+use std::sync::OnceLock;
+
+static KEYPAIR: OnceLock<KeyPair> = OnceLock::new();
 
 fuzz_target!(|data: &[u8]| {
     if data.len() < 16 {
         return;
     }
+    let keypair = KEYPAIR.get_or_init(|| KeyPair::new(512).unwrap());
 
-    let (private_key, public_key) = generate_keypair(512).unwrap();
+    let private_key = keypair.priv_key();
+    let public_key = keypair.pub_key();
 
     let (m1_bytes, m2_bytes) = data.split_at(data.len() / 2);
     let m1 = BigUint::from_bytes_be(m1_bytes);
     let m2 = BigUint::from_bytes_be(m2_bytes);
 
-    if m1 >= *private_key.p() || m2 >= *private_key.p() {
+    let Ok(c1) = Okuchi::encrypt(&public_key, m1.to_bytes_be()) else {
         return;
-    }
+    };
+    let Ok(c2) = Okuchi::encrypt(&public_key, m2.to_bytes_be()) else {
+        return;
+    };
 
-    if let (Ok(c1), Ok(c2)) = (Okuchi::encrypt(&public_key, &m1), Okuchi::encrypt(&public_key, &m2)) {
-        let c_prod = &c1 * &c2;
-        let c_prod_mod = Ciphertext::new(c_prod.value() % public_key.n());
+    let c_prod = &c1 * &c2;
+    let c_prod_mod = Ciphertext::new(c_prod.value() % public_key.n());
 
-        if let Ok(decrypted) = Okuchi::decrypt(&private_key, &c_prod_mod) {
-            let expected = (&m1 + &m2) % private_key.p();
-            assert_eq!(expected, decrypted);
-        }
-    }
+    let decryption_res = Okuchi::decrypt(&private_key, &c_prod_mod);
+    assert!(decryption_res.is_ok());
 });

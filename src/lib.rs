@@ -12,28 +12,19 @@
 //!
 //! The scheme is secure under the p-subgroup assumption. The private key
 //! (p, q) is automatically zeroized on drop via the `zeroize` crate.
-//!
-//! ## Example
-//!
-//! ```rust,no_run
-//! use okuchi::{KeyPair, Okuchi};
-//! use num_bigint_dig::BigUint;
-//!
-//! let keypair = KeyPair::new(2048).expect("key generation failed");
-//! let message = "hello world";
-//!
-//! let ciphertext = Okuchi::encrypt(keypair.pub_key(), &message).expect("encryption failed");
-//! let decrypted = Okuchi::decrypt(keypair.priv_key(), &ciphertext).expect("decryption failed");
-//! assert_eq!(message.as_bytes(), decrypted);
-//! ```
 
 mod ciphertext;
 mod error;
 mod key;
-mod okuchi;
 mod util;
 
+mod decrypt;
+mod encrypt;
+mod stream;
+
 pub use ciphertext::*;
+pub use decrypt::*;
+pub use encrypt::*;
 pub use error::*;
 pub use key::*;
-pub use okuchi::*;
+pub use stream::*;

@@ -27,6 +27,12 @@ pub enum Error {
     #[error("Invalid private key")]
     InvalidPrivateKey,
 
+    #[error("encryption failed: {0}")]
+    EncryptionFailed(String),
+
     #[error("decryption failed: {0}")]
     DecryptionFailed(String),
+
+    #[error("key mismatch")]
+    KeyMismatch,
 }

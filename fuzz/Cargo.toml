@@ -9,7 +9,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-num-bigint = { version = "0.4", features = ["rand"] }
+num-bigint-dig = { version = "0.8", features = ["zeroize", "prime", "rand", "u64_digit"] }
 
 [dependencies.okuchi]
 path = ".."
