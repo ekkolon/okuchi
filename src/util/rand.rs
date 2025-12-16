@@ -291,7 +291,6 @@ const fn optimal_miller_rabin_rounds(bits: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::rngs::OsRng;
 
     #[test]
     fn generates_valid_safe_prime_128() {
