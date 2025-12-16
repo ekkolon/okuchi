@@ -1,62 +1,84 @@
 # Okuchi
 
-A pure Rust implementation of the **Okamoto–Uchiyama** cryptosystem - a probabilistic public-key scheme whose security relies on the hardness of factoring and discrete logarithms modulo a composite number.
+A pure Rust implementation of the **Okamoto–Uchiyama (OU)** public-key cryptosystem.
+
+Okamoto–Uchiyama is a probabilistic encryption scheme whose security is based on the hardness of integer factorization and related problems in modular arithmetic over composite moduli.
 
 **Okuchi** is a portmanteau of **Ok**amoto and **Uchi**yama.
 
-## ⚠️ Important Notice
+---
 
-The project is evolving and should be treated as a **work in progress**.
-Breaking changes, redesigns, or API removals may occur without notice.
+## Example
 
-This implementation is (still) **experimental**, **incomplete**, and **not audited** by any external security professionals.
-It may contain defects, conceptual mistakes, side-channel vulnerabilities, insecure parameter choices, or other issues that could compromise confidentiality, integrity, or availability of data.
-
-**Do not use Okuchi in production systems, high-risk environments, or anywhere security or correctness is critical.**
-
-If you choose to use this code despite these warnings, **you do so entirely at your own risk**. No guarantees - explicit or implied - are made regarding performance, correctness, security, or fitness for any purpose.
-The author(s) **assume no liability** for any damages, losses, or consequences resulting from the use, misuse, or inability to use this software.
-
-## Goals
-
-- Provide a correct, readable and safe Rust implementation of the **OU** cryptosystem
-- Serve as a reference for learning and experimentation
-- Maintain minimal dependencies and clear internal structure
-
-This project **does not** aim to be a hardened or production-quality cryptographic library.
-
-## Usage
-
-As mentioned above, until the library matures and receives proper review, usage should be limited to:
-
-- academic experiments
-- prototyping
-- security research
-- code reading and learning
-
-**Production use is strongly discouraged.**
-
-### Example
-
-```rs
-use okuchi::{KeyPair, Okuchi};
+```rust
+use okuchi::{KeyPair, EncryptBytes, DecryptBytes};
 
 let keypair = KeyPair::new(2048).expect("key generation failed");
-let pub_key = keypair.pub_key();
-let priv_key = keypair.priv_key();
-
-let message = "hello world 🌍";
+let message = "hello world";
 
 // Encrypt (stream API)
-let packed = Okuchi::encrypt_stream(pub_key, message).unwrap();
+let ciphertext = keypair.encrypt_bytes(message).unwrap();
 
 // Decrypt
-let decrypted_bytes = Okuchi::decrypt_stream(priv_key, &packed).unwrap();
+let decrypted_bytes = keypair.decrypt_bytes(priv_key, &ciphertext).unwrap();
 let decrypted = String::from_utf8(decrypted_bytes).unwrap();
 
 assert_eq!(message, decrypted);
 ```
 
-## References
+---
 
-- Okamoto, T., Uchiyama, S. (1998). _A New Public-Key Cryptosystem as Secure as Factoring._
+## Project Goals
+
+Okuchi is intentionally narrow in scope. Its goals are to:
+
+- Provide a **clear and readable** Rust implementation of the Okamoto–Uchiyama cryptosystem
+- Favor **explicitness and correctness** over performance tricks
+- Keep cryptographic concepts and data flow easy to follow
+- Serve as a **learning and reference implementation**
+
+This project explicitly does **not** aim to be:
+
+- A production-grade cryptographic library
+- Constant-time or side-channel resistant
+- API-stable
+- Optimized for performance
+
+---
+
+## Status and Scope
+
+⚠️ **This project is experimental.**
+
+Okuchi is under active development and should be considered a **work in progress**. The API, internal structure, and cryptographic choices may change without notice. No backwards-compatibility guarantees are provided at this stage.
+
+This implementation is:
+
+- **Incomplete**
+- **Unaudited**
+- **Not hardened against side-channels**
+- **Not reviewed by external cryptography professionals**
+
+It may contain:
+
+- Logical or mathematical errors
+- Insecure parameter choices
+- Side-channel vulnerabilities
+- Implementation bugs affecting correctness or security
+
+**Do not use this library in production, high-risk environments, or any system where security or correctness matters.**
+
+If you decide to experiment with this code despite these warnings, you do so entirely at your own risk. No guarantees are made regarding security, correctness, performance, or suitability for any purpose. The author(s) assume no liability for damages or losses resulting from its use.
+
+---
+
+## Intended Use
+
+Until the implementation matures and undergoes proper cryptographic review, usage should be limited to:
+
+- Academic study
+- Cryptography research and experimentation
+- Prototyping
+- Code reading and educational purposes
+
+**Production use is strongly discouraged.**

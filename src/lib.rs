@@ -34,8 +34,8 @@
 //!   EUROCRYPT 1998.
 //!   <https://link.springer.com/chapter/10.1007/BFb0054135>
 
-#![deny(unsafe_code)] // forbid unsafe
-#![deny(missing_docs)] // require docs everywhere
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
 #![deny(missing_debug_implementations)] // require Debug for public structs
 #![deny(unused_must_use)] // catch ignored results
 #![deny(nonstandard_style)] // enforce Rust naming conventions
@@ -51,8 +51,29 @@ mod ciphertext;
 mod crypto;
 mod error;
 mod keypair;
+mod util;
 
 pub use ciphertext::Ciphertext;
 pub use crypto::{Decrypt, DecryptBytes, Encrypt, EncryptBytes, Stream};
 pub use error::{Error, Result};
 pub use keypair::{KeyPair, KeyPairBuilder, PrivateKey, PublicKey};
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_name() {
+        let keypair = KeyPair::generate_with_size(512).expect("key generation failed");
+        let message = "hello world";
+
+        // Encrypt (stream API)
+        let ciphertext = keypair.encrypt_bytes(message).unwrap();
+
+        // Decrypt
+        let decrypted_bytes = keypair.decrypt_bytes(&ciphertext).unwrap();
+        let decrypted = String::from_utf8(decrypted_bytes).unwrap();
+
+        assert_eq!(message, decrypted);
+    }
+}

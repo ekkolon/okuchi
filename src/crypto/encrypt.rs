@@ -9,7 +9,6 @@ use crate::keypair::PublicKey;
 use num_bigint_dig::{BigUint, RandBigInt};
 use num_traits::One;
 use rand::SeedableRng;
-use rand::rngs::StdRng;
 
 impl Encrypt for PublicKey {
     fn encrypt<P: AsRef<[u8]>>(&self, plaintext: P) -> Result<Ciphertext> {
@@ -19,7 +18,7 @@ impl Encrypt for PublicKey {
         }
 
         // Sample fresh randomness for probabilistic encryption.
-        let mut rng = StdRng::from_os_rng();
+        let mut rng = rand::rngs::StdRng::from_os_rng();
         let r = rng.gen_biguint_range(&BigUint::one(), &self.n);
 
         // c = g^m · h^r mod n

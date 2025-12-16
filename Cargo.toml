@@ -11,17 +11,19 @@ readme = "README.md"
 [dependencies]
 num-bigint-dig = { version = "0.9", features = ["zeroize", "prime", "rand"] }
 num-traits = "0.2"
+num-integer = "0.1"
 rand = "0.9"
 zeroize = { version = "1.8", features = ["derive"] }
 thiserror = "2.0"
-
+rayon = { version = "1.11", optional = true }
 
 [dev-dependencies]
 criterion = "0.8"
-
+okuchi = { path = ".", features = ["expose-secret", "allow-weak-keys"] }
 
 [features]
-default = []
+default = ["rayon"]
+rayon = ["dep:rayon"]
 expose-secret = []
 allow-weak-keys = []
 

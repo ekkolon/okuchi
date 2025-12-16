@@ -68,4 +68,8 @@ pub enum Error {
     /// The provided keys do not form a valid matching pair.
     #[error("key mismatch")]
     KeyMismatch,
+
+    /// The provided keys do not form a valid matching pair.
+    #[error("bit length too short")]
+    BitLengthTooShort(usize),
 }

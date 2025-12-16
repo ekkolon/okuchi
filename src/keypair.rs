@@ -3,8 +3,6 @@
 
 #![allow(unused_assignments)]
 
-mod util;
-
 use crate::ciphertext::Ciphertext;
 use crate::crypto::{Decryptor, Encryptor};
 use crate::error::{Error, Result};
@@ -12,6 +10,7 @@ use crate::{Decrypt, DecryptBytes, Encrypt, EncryptBytes};
 
 use num_bigint_dig::BigUint;
 use num_traits::{One, Zero};
+use rand::SeedableRng;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 /// Public parameters of the cryptosystem.
@@ -183,50 +182,46 @@ pub struct KeyPairBuilder {
 }
 
 impl KeyPairBuilder {
+    /// Minimum recommended for production (NIST/ENISA standard)
+    const MIN_SECURE_BITS: usize = 2048;
+
+    /// Absolute minimum bitsds
+    const MIN_BITS: usize = 128;
+
     /// Create a builder with default parameters.
     pub fn new() -> Self {
-        Self { bit_length: 2048 }
+        Self { bit_length: Self::MIN_SECURE_BITS }
     }
-
-    /// Minimum recommended for production (NIST/ENISA standard)
-    pub const MIN_SECURE_BITS: usize = 2048;
-
-    /// Absolute minimum enforced in production builds
-    /// Can be bypassed with `allow-weak-keys` feature flag
-    #[cfg(not(feature = "allow-weak-keys"))]
-    const ABSOLUTE_MIN_BITS: usize = 512;
-
-    #[cfg(feature = "allow-weak-keys")]
-    const ABSOLUTE_MIN_BITS: usize = 128;
 
     /// Set the desired modulus bit length.
     pub fn bit_length(mut self, bits: usize) -> Self {
-        self.bit_length = bits;
+        self.bit_length = bits.max(Self::MIN_BITS);
         self
     }
 
     /// Generate the key pair.
     pub fn build(self) -> Result<KeyPair> {
-        // Hard block dangerously small keys
-        if self.bit_length < Self::ABSOLUTE_MIN_BITS {
+        if self.bit_length < Self::MIN_BITS {
             return Err(Error::InvalidKeySize);
         }
 
-        // Loud warning for weak keys
-        if self.bit_length < Self::MIN_SECURE_BITS {
-            eprintln!(
-                "⚠️  SECURITY WARNING: {}-bit key is cryptographically weak!",
-                self.bit_length
-            );
-            eprintln!("⚠️  Use {} bits minimum for production", Self::MIN_SECURE_BITS);
-        }
+        let p_bits = Self::MIN_BITS.max(self.bit_length / 3);
+        let q_bits_init = self.bit_length;
+        let q_bits = q_bits_init.max(Self::MIN_BITS + Self::MIN_BITS / 3);
 
-        // Modulus structure: n = p²q, so |n| = 2|p| + |q|.
-        let p_bits = self.bit_length / 3;
-        let p = util::generate_safe_prime(p_bits);
+        let (p_result, q_result) = rayon::join(
+            || {
+                let mut rng = rand::rngs::StdRng::from_os_rng();
+                crate::util::safe_prime(p_bits, &mut rng)
+            },
+            || {
+                let mut rng = rand::rngs::StdRng::from_os_rng();
+                crate::util::safe_prime(q_bits, &mut rng)
+            },
+        );
 
-        let q_bits = self.bit_length - (2 * p_bits);
-        let q = util::generate_safe_prime(q_bits);
+        let p = p_result?;
+        let q = q_result?;
 
         if p == q {
             return Err(Error::KeyGenerationFailed("Primes must be distinct".into()));
@@ -236,7 +231,7 @@ impl KeyPairBuilder {
         let p_minus_1 = &p - BigUint::one();
         let n = &p_squared * &q;
 
-        let g = util::find_generator(&n, &p_minus_1, &p_squared);
+        let g = crate::util::find_generator(&n, &p_minus_1, &p_squared);
         let h = g.modpow(&n, &n);
 
         let public = PublicKey::new(n, g, h, self.bit_length)?;

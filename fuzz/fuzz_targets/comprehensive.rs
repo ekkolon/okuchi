@@ -1,4 +1,3 @@
-#![allow(dead_code, unused_imports, unused_variables, clippy::all)]
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
@@ -10,20 +9,17 @@ use okuchi::{Decrypt, DecryptBytes, Encrypt, EncryptBytes, KeyPair, Stream};
 static KEYPAIR: OnceLock<KeyPair> = OnceLock::new();
 
 fuzz_target!(|data: &[u8]| {
-    // Use a cached 128-bit keypair for faster fuzzing
-    // Note: 128-bit is insecure for production, but fine for fuzzing
+    // Use a cached 512-bit keypair for faster fuzzing
     let keypair = KEYPAIR
         .get_or_init(|| KeyPair::generate_with_size(128).expect("Failed to generate keypair"));
 
     let public = keypair.public_key();
 
-    // Conservative plaintext size limit for 128-bit key
-    // For n = p²q with 128 bits: p ≈ 42 bits ≈ 5 bytes
-    // Use conservative limit of 4 bytes
+    // Conservative plaintext size limit for 512-bit key
     let max_bytes = 4;
     let safe_data = if data.len() > max_bytes { &data[..max_bytes] } else { data };
 
-    // ----- 1. Single-block encryption roundtrip -----
+    // --- Single-block encryption roundtrip
     if let Ok(ciphertext) = public.encrypt(safe_data) {
         match keypair.decrypt(&ciphertext) {
             Ok(plaintext) => {
@@ -35,7 +31,7 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 2. Multi-block encryption via encrypt_bytes -----
+    // --- Multi-block encryption via encrypt_bytes
     if let Ok(packed) = public.encrypt_bytes(safe_data) {
         match keypair.decrypt_bytes(&packed) {
             Ok(plaintext) => {
@@ -48,7 +44,7 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 3. Streaming encryption with various chunk sizes -----
+    // --- Streaming encryption with various chunk sizes
     let chunk_sizes = [1, 2, 4, 8, 16];
     for &chunk_size in &chunk_sizes {
         // Encrypt with streaming
@@ -89,7 +85,7 @@ fuzz_target!(|data: &[u8]| {
         );
     }
 
-    // ----- 4. Invalid ciphertext fuzzing (corruption) -----
+    // ---Invalid ciphertext fuzzing (corruption)
     if !safe_data.is_empty() {
         if let Ok(mut packed) = public.encrypt_bytes(safe_data) {
             // Corrupt the packed data in various ways
@@ -112,7 +108,7 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 5. Edge case: empty plaintext -----
+    // ---Edge case: empty plaintext
     if let Ok(ciphertext) = public.encrypt(&[]) {
         match keypair.decrypt(&ciphertext) {
             Ok(plaintext) => {
@@ -123,7 +119,7 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 6. Edge case: single zero byte -----
+    // --- Edge case: single zero byte
     if let Ok(ciphertext) = public.encrypt(&[0]) {
         match keypair.decrypt(&ciphertext) {
             Ok(plaintext) => {
@@ -134,7 +130,7 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 7. Edge case: all ones (near maximum) -----
+    // --- Edge case: all ones (near maximum)
     let all_ones = vec![0xFF; max_bytes];
     if let Ok(ciphertext) = public.encrypt(&all_ones) {
         match keypair.decrypt(&ciphertext) {
@@ -150,7 +146,7 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 8. Homomorphic addition property -----
+    // ---Homomorphic addition property
     // Split safe_data into two parts and test E(a) * E(b) = E(a+b)
     if safe_data.len() >= 2 {
         let mid = safe_data.len() / 2;
@@ -172,7 +168,7 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 9. Probabilistic encryption property -----
+    // --- Probabilistic encryption property
     // Same plaintext should produce different ciphertexts
     if !safe_data.is_empty() {
         if let (Ok(ct1), Ok(ct2)) = (public.encrypt(safe_data), public.encrypt(safe_data)) {
@@ -193,9 +189,8 @@ fuzz_target!(|data: &[u8]| {
         }
     }
 
-    // ----- 10. Byte-by-byte streaming (extreme fragmentation) -----
+    // --- Byte-by-byte streaming (extreme fragmentation)
     if safe_data.len() > 0 && safe_data.len() <= 8 {
-        // Only test small inputs for performance
         let mut encryptor = public.encryptor();
         for &byte in safe_data {
             if encryptor.update([byte]).is_err() {

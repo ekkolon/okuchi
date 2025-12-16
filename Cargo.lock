@@ -314,8 +314,11 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "num-bigint-dig",
+ "num-integer",
  "num-traits",
+ "okuchi",
  "rand",
+ "rayon",
  "thiserror",
  "zeroize",
 ]
