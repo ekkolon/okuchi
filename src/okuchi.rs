@@ -407,7 +407,7 @@ mod tests {
     fn leading_zero_bytes_preserved() {
         let keypair = KeyPair::new(TEST_KEY_SIZE).unwrap();
         let max_block = {
-            let n_bits = keypair.pub_key().n().bits() as usize;
+            let n_bits = keypair.pub_key().n().bits();
             std::cmp::max(1, ((n_bits / 3).saturating_sub(1)) / 8)
         };
         let mut data = vec![0u8; max_block];
