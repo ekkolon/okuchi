@@ -48,7 +48,7 @@ impl Okuchi {
 
         // Enforce m < p. p is secret; use conservative bound: p ≥ 2^(p_bits-1).
         let max_bits = pub_key.plaintext_bound_bits();
-        if plaintext.bits() as usize > max_bits {
+        if plaintext.bits() > max_bits {
             return Err(Error::PlaintextTooLarge);
         }
 
@@ -114,7 +114,7 @@ impl Okuchi {
         } else {
             bytes.len().div_ceil(max_block)
         };
-        let est_ct_bytes = pub_key.n().bits() as usize / 8 + 1;
+        let est_ct_bytes = pub_key.n().bits() / 8 + 1;
         let mut out = Vec::with_capacity(8 + block_count * (4 + est_ct_bytes));
 
         out.extend_from_slice(&(block_count as u32).to_be_bytes());
@@ -256,7 +256,7 @@ impl Okuchi {
                     max_block
                 };
                 let pad = expected.saturating_sub(plain.len());
-                result.extend(std::iter::repeat(0u8).take(pad));
+                result.extend(std::iter::repeat_n(0u8, pad));
             }
 
             result.extend_from_slice(&plain);
@@ -299,7 +299,7 @@ impl Okuchi {
         let blocks_b = Self::parse_blocks(packed_b)?;
         let n = pub_key.n();
 
-        let est_ct_bytes = n.bits() as usize / 8 + 1;
+        let est_ct_bytes = n.bits() / 8 + 1;
         let mut out = Vec::with_capacity(8 + a_cnt * (4 + est_ct_bytes));
         out.extend_from_slice(&(a_cnt as u32).to_be_bytes());
         out.extend_from_slice(&0u32.to_be_bytes()); // original_data_len = 0 sentinel
@@ -353,7 +353,7 @@ impl Okuchi {
     /// the block boundaries used by [`encrypt_stream`](Okuchi::encrypt_stream) and
     /// [`decrypt_stream`](Okuchi::decrypt_stream).
     fn max_plaintext_bytes(pub_key: &PublicKey) -> usize {
-        let n_bits = pub_key.n().bits() as usize;
+        let n_bits = pub_key.n().bits();
         let p_bits = n_bits / 3;
         let bytes = p_bits.saturating_sub(1) / 8;
         std::cmp::max(1, bytes)

@@ -56,7 +56,7 @@ pub fn ct_modpow(base: &BigUint, exp: &BigUint, modulus: &BigUint) -> BigUint {
 
     // Precision: round modulus bit-length up to a multiple of 64 (limb size)
     let raw_bits = modulus.bits() as u32;
-    let bits = ((raw_bits + 63) / 64) * 64;
+    let bits = raw_bits.div_ceil(64) * 64;
     let bits = bits.max(64);
 
     let base_b = to_boxed(&base, bits);

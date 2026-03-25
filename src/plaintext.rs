@@ -46,7 +46,7 @@ impl Plaintext {
     pub fn new(value: impl Into<BigUint>, pub_key: &PublicKey) -> Result<Plaintext> {
         let value = value.into();
         let max_bits = pub_key.plaintext_bound_bits();
-        if value.bits() as usize > max_bits {
+        if value.bits() > max_bits {
             return Err(Error::PlaintextTooLarge);
         }
         Ok(Self(value))
