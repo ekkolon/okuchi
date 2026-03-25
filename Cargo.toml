@@ -1,27 +1,34 @@
 [package]
 name = "okuchi"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 authors = ["Nelson Dominguez <ekkolon@proton.me>"]
 description = "Okamoto-Uchiyama Cryptosystem Implementation"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 
-
 [dependencies]
-num-bigint-dig = { version = "0.8", features = ["zeroize", "prime", "rand", "u64_digit"] }
+num-bigint-dig = { version = "0.8", features = [
+    "zeroize",
+    "prime",
+    "rand",
+    "u64_digit",
+] }
 num-traits = "0.2"
+num-integer = "0.1"
 rand = "0.8"
-zeroize = { version = "1.6", features = ["derive"] }
-thiserror = "2.0"
+zeroize = { version = "1.8", features = ["derive"] }
+thiserror = "2"
+# Constant-time modular arithmetic for the decryption hot path (SECURITY-2).
+# BoxedUint provides heap-allocated variable-width integers with CT guarantees.
+crypto-bigint = { version = "0.7", features = ["alloc"] }
 
 [dev-dependencies]
-criterion = "0.7"
+criterion = "0.5"
 
 [[bench]]
 name = "okuchi"
 harness = false
-
 
 [profile.release]
 opt-level = 3
