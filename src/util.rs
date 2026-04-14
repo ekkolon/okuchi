@@ -9,7 +9,8 @@ use crypto_bigint::modular::{BoxedMontyForm, BoxedMontyParams};
 use crypto_bigint::{BoxedUint, Odd};
 use num_bigint_dig::{BigUint, RandPrime};
 use num_traits::One;
-use rand::rngs::OsRng;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 use crate::{Error, Result};
 
@@ -98,6 +99,6 @@ pub fn generate_prime(bits: usize) -> Result<BigUint> {
             "prime bit length must be >= 2".into(),
         ));
     }
-    let mut rng = OsRng;
+    let mut rng = StdRng::from_os_rng();
     Ok(rng.gen_prime(bits)) // gen_prime uses Miller-Rabin internally
 }

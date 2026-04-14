@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 [dependencies]
-num-bigint-dig = { version = "0.8", features = [
+num-bigint-dig = { version = "0.9.1", features = [
     "zeroize",
     "prime",
     "rand",
@@ -16,7 +16,7 @@ num-bigint-dig = { version = "0.8", features = [
 ] }
 num-traits = "0.2"
 num-integer = "0.1"
-rand = "0.8"
+rand = "0.9.3"
 zeroize = { version = "1.8", features = ["derive"] }
 thiserror = "2"
 # Constant-time modular arithmetic for the decryption hot path (SECURITY-2).
