@@ -4,7 +4,8 @@
 use num_bigint_dig::{BigUint, ModInverse, RandBigInt};
 use num_integer::Integer;
 use num_traits::{One, Zero};
-use rand::rngs::OsRng;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::util::l_function;
@@ -214,7 +215,7 @@ impl KeyPair {
             });
         }
 
-        let mut rng = OsRng;
+        let mut rng = StdRng::from_os_rng();
         let p_bits = bit_length / 3;
         let q_bits = bit_length - (2 * p_bits);
 

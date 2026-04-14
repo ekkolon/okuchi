@@ -4,7 +4,8 @@
 use num_bigint_dig::{BigUint, RandBigInt};
 use num_integer::Integer;
 use num_traits::{One, Zero};
-use rand::rngs::OsRng;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 use crate::ciphertext::Ciphertext;
 use crate::error::{Error, Result};
@@ -52,7 +53,7 @@ impl Okuchi {
             return Err(Error::PlaintextTooLarge);
         }
 
-        let mut rng = OsRng;
+        let mut rng = StdRng::from_os_rng();
 
         // OU requires gcd(r, n) = 1. With n = p²q the failure probability is
         // ≈ 1/p + 1/q. This is negligible but the protocol is undefined otherwise.
