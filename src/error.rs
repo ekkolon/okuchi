@@ -38,4 +38,12 @@ pub enum Error {
     /// A stream decryption or packed-format operation failed.
     #[error("Decryption failed: {0}")]
     DecryptionFailed(String),
+
+    /// CCA verification failed: the ciphertext was tampered with or is invalid.
+    #[error("CCA verification failed: ciphertext is invalid or tampered with")]
+    VerificationFailed,
+
+    /// AEAD seal operation failed (nonce generation or encryption error).
+    #[error("Seal operation failed")]
+    SealFailed,
 }

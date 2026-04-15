@@ -65,6 +65,10 @@ mod error;
 mod key;
 mod okuchi;
 mod plaintext;
+#[cfg(feature = "seal")]
+mod seal;
+#[cfg(feature = "stream")]
+mod stream;
 mod util;
 
 pub use ciphertext::Ciphertext;
